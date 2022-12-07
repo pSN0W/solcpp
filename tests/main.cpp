@@ -1060,17 +1060,20 @@ TEST_CASE("program account change") {
 TEST_CASE("on root change") {
   solana::rpc::subscription::WebSocketSubscriber sub("api.devnet.solana.com",
                                                      "80");
-  int num_notif, fin_number;
+  int num_notif;
+  std::promise<int> fin_number;
+  std::future<int> fin_num_fut = fin_number.get_future();
   auto on_callback = [&num_notif](const json&) { ++num_notif; };
   auto on_subscribe = [&num_notif](const json&) { num_notif = 0; };
   auto on_unsubscribe = [&num_notif, &fin_number](const json&) {
-    fin_number = num_notif;
+    fin_number.set_value(num_notif);
   };
   int sub_id = sub.onRootChange(on_callback, solana::Commitment::CONFIRMED,
                                 on_subscribe, on_unsubscribe);
   CHECK_GT(num_notif, 0);
   sub.removeRootChangeListener(sub_id);
-  CHECK_EQ(num_notif, fin_number);
+  int res = fin_num_fut.get();
+  CHECK_EQ(num_notif, res);
 }
 
 TEST_CASE("on signature") {
@@ -1096,31 +1099,38 @@ TEST_CASE("on signature") {
 TEST_CASE("on slot change") {
   solana::rpc::subscription::WebSocketSubscriber sub("api.devnet.solana.com",
                                                      "80");
-  int num_notif, fin_number;
+  int num_notif;
+  std::promise<int> fin_number;
+  std::future<int> fin_num_fut = fin_number.get_future();
   auto on_callback = [&num_notif](const json&) { ++num_notif; };
   auto on_subscribe = [&num_notif](const json&) { num_notif = 0; };
   auto on_unsubscribe = [&num_notif, &fin_number](const json&) {
-    fin_number = num_notif;
+    fin_number.set_value(num_notif);
   };
+
   int sub_id = sub.onSlotChange(on_callback, solana::Commitment::CONFIRMED,
                                 on_subscribe, on_unsubscribe);
   CHECK_GT(num_notif, 0);
   sub.removeSlotChangeListener(sub_id);
-  CHECK_EQ(num_notif, fin_number);
+  int res = fin_num_fut.get();
+  CHECK_EQ(num_notif, res);
 }
 
 TEST_CASE("on slot update") {
   solana::rpc::subscription::WebSocketSubscriber sub("api.devnet.solana.com",
                                                      "80");
-  int num_notif, fin_number;
+  int num_notif;
+  std::promise<int> fin_number;
+  std::future<int> fin_num_fut = fin_number.get_future();
   auto on_callback = [&num_notif](const json&) { ++num_notif; };
   auto on_subscribe = [&num_notif](const json&) { num_notif = 0; };
   auto on_unsubscribe = [&num_notif, &fin_number](const json&) {
-    fin_number = num_notif;
+    fin_number.set_value(num_notif);
   };
   int sub_id = sub.onSlotUpdate(on_callback, solana::Commitment::CONFIRMED,
                                 on_subscribe, on_unsubscribe);
   CHECK_GT(num_notif, 0);
   sub.removeSlotUpdateListener(sub_id);
-  CHECK_EQ(num_notif, fin_number);
+  int res = fin_num_fut.get();
+  CHECK_EQ(num_notif, res);
 }
